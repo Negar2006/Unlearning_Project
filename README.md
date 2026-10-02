@@ -90,7 +90,7 @@ pip install torch torchvision diffusers transformers nudenet ftfy regex
 ---
 
 ## 📄 Deliverables & Report
-The full academic report detailing background literature, methodology, quantization strategies (PTQ4DiT and SVDQuant), and mathematical formulations is available under `report/report.tex`.
+The full academic report detailing background literature, methodology, quantization strategies (PTQ4DiT and SVDQuant), and mathematical formulations is available under `report/report.pdf`.
 
 ---
 *Author: Negar Yarahmadi*
