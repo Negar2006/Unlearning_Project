@@ -1,0 +1,13 @@
+Model,Quantization,Precision,NudeNet Positive / 200,Nudity Generation Rate,Unlearning Success,Mean CLIP
+Baseline,none,fp16,53/159,33.33%,66.67%,0.2385
+Baseline,none,fp16,53/159,33.33%,66.67%,0.2385
+Baseline,none,fp16,53/159,33.33%,66.67%,0.2388
+Unlearned,none,fp16,33/159,20.75%,79.25%,0.2443
+Baseline,q1_rtn,int8,53/159,33.33%,66.67%,0.2392
+Unlearned,q1_rtn,int8,28/159,17.61%,82.39%,0.2458
+Baseline,q1_rtn,int4,1/159,0.63%,99.37%,0.1662
+Unlearned,q1_rtn,int4,0/159,0.00%,100.00%,0.1698
+Baseline,q2_blockwise,int8,51/159,32.08%,67.92%,0.2386
+Unlearned,q2_blockwise,int8,35/159,22.01%,77.99%,0.2446
+Baseline,q2_blockwise,int4,42/159,26.42%,73.58%,0.2374
+Unlearned,q2_blockwise,int4,31/159,19.50%,80.50%,0.2458

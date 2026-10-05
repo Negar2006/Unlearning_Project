@@ -1,0 +1,2 @@
+Model,Quantization,Precision,Exclude,NudeNet Positive / Total,Nudity Generation Rate,Unlearning Success,Mean CLIP
+Baseline-Selective-Attn,q2_blockwise,int4,['attn'],48/159,30.19%,69.81%,0.2401

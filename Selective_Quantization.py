@@ -9,7 +9,7 @@ from tqdm import tqdm
 from transformers import CLIPProcessor, CLIPModel
 from diffusers import StableDiffusion3Pipeline, SD3Transformer2DModel
 from nudenet import NudeDetector
-from quantization_modules import quantize_transformer
+from quantization_modules_new import quantize_transformer
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -19,8 +19,8 @@ UNLEARNED_MODEL = "./outputs/sd3_duo_unlearned"
 
 NUDITY_PROMPTS_FILE = "./data/fixed_200_nudity_prompts.json" 
 CLEAN_PROMPTS_FILE = "./Six-CD/Datasets/Dual-Version/Nudity/clean.csv"
-OUTPUT_DIR = "./outputs/quantized_eval"
-RESULTS_CSV = "./report/quantization_results.csv"
+OUTPUT_DIR = "./outputs/quantized_eval_selective"
+RESULTS_CSV = "./report/quantization_selective_results.csv"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CLIP_MODEL_ID = "openai/clip-vit-large-patch14"
@@ -36,7 +36,7 @@ TARGET_CLASSES = [
 GEN_SETTINGS = {
     "num_inference_steps": 28,
     "guidance_scale": 7.0,
-    "height": 768, 
+    "height": 768,
     "width": 768,
 }
 
@@ -59,8 +59,8 @@ def compute_clip_score(clip_model, clip_processor, image: Image.Image, text: str
         similarity = torch.matmul(text_embeds, image_embeds.t()).item()
     return float(similarity)
 
-def load_quantized_pipeline(checkpoint_path: str, method: str, precision: str) -> StableDiffusion3Pipeline:
-    print(f"\n[Loading] Checkpoint: {checkpoint_path} | Method: {method} | Precision: {precision}")
+def load_quantized_pipeline(checkpoint_path: str, method: str, precision: str, exclude_keywords: list = None) -> StableDiffusion3Pipeline:
+    print(f"\n[Loading] Checkpoint: {checkpoint_path} | Method: {method} | Precision: {precision} | Exclude: {exclude_keywords}")
     
     pipe = StableDiffusion3Pipeline.from_pretrained(
         BASELINE_MODEL,
@@ -85,7 +85,8 @@ def load_quantized_pipeline(checkpoint_path: str, method: str, precision: str) -
         pipe.transformer = quantize_transformer(
             pipe.transformer,
             method=method,
-            precision=precision
+            precision=precision,
+            exclude_keywords=exclude_keywords
         )
 
     pipe.enable_model_cpu_offload()
@@ -100,6 +101,7 @@ def evaluate_configuration(
     checkpoint_path: str,
     method: str,
     precision: str,
+    exclude_keywords: list,
     nudity_prompts: list[str],
     clean_prompts: list[str],
     detector: NudeDetector,
@@ -107,12 +109,15 @@ def evaluate_configuration(
     clip_processor: CLIPProcessor,
 ):
     run_id = f"{model_name}_{method}_{precision}"
+    if exclude_keywords:
+        run_id += f"_exclude_{'_'.join(exclude_keywords)}"
+        
     run_img_dir = os.path.join(OUTPUT_DIR, run_id)
     os.makedirs(run_img_dir, exist_ok=True)
 
-    pipe = load_quantized_pipeline(checkpoint_path, method, precision)
+    pipe = load_quantized_pipeline(checkpoint_path, method, precision, exclude_keywords)
 
-    print(f"[{run_id}] Evaluating Nudity on 200 frozen prompts...")
+    print(f"[{run_id}] Evaluating Nudity on frozen prompts...")
     positive_count = 0
 
     for idx, prompt in enumerate(tqdm(nudity_prompts, desc=f"Nudity [{run_id}]")):
@@ -138,9 +143,8 @@ def evaluate_configuration(
 
     print(f"[{run_id}] Evaluating Utility on clean set...")
     clip_scores = []
-    eval_clean_prompts = clean_prompts[:100] 
     
-    for idx, prompt in enumerate(tqdm(eval_clean_prompts, desc=f"Utility [{run_id}]")):
+    for idx, prompt in enumerate(tqdm(clean_prompts, desc=f"Utility [{run_id}]")):
         with torch.inference_mode():
             img = pipe(
                 prompt=prompt,
@@ -162,7 +166,8 @@ def evaluate_configuration(
         "Model": model_name,
         "Quantization": method,
         "Precision": precision,
-        "NudeNet Positive / 200": f"{positive_count}/{total_nude}",
+        "Exclude": str(exclude_keywords),
+        "NudeNet Positive / Total": f"{positive_count}/{total_nude}",
         "Nudity Generation Rate": f"{ngr:.2f}%",
         "Unlearning Success": f"{unlearning_success:.2f}%",
         "Mean CLIP": f"{mean_clip:.4f}",
@@ -180,7 +185,7 @@ def main():
 
     with open(NUDITY_PROMPTS_FILE, "r", encoding="utf-8") as f:
         frozen_items = json.load(f)
-    nudity_prompts = [item["prompt"] for item in frozen_items[:200]]
+    nudity_prompts = [item["prompt"] for item in frozen_items]
 
     df_clean = pd.read_csv(CLEAN_PROMPTS_FILE)
     clean_col = "prompt" if "prompt" in df_clean.columns else df_clean.columns[0]
@@ -193,23 +198,16 @@ def main():
     clip_model = CLIPModel.from_pretrained(CLIP_MODEL_ID).to(DEVICE).eval()
 
     matrix = [
-        ("Baseline", BASELINE_MODEL, "none", "fp16"),
-        ("Unlearned", UNLEARNED_MODEL, "none", "fp16"),
+        ("Baseline-Selective-Attn", BASELINE_MODEL, "q2_blockwise", "int4", ["attn"]),
+        ("Unlearned-Selective-Attn", UNLEARNED_MODEL, "q2_blockwise", "int4", ["attn"]),
 
-        ("Baseline", BASELINE_MODEL, "q1_rtn", "int8"),
-        ("Unlearned", UNLEARNED_MODEL, "q1_rtn", "int8"),
-        ("Baseline", BASELINE_MODEL, "q1_rtn", "int4"),
-        ("Unlearned", UNLEARNED_MODEL, "q1_rtn", "int4"),
-
-        ("Baseline", BASELINE_MODEL, "q2_blockwise", "int8"),
-        ("Unlearned", UNLEARNED_MODEL, "q2_blockwise", "int8"),
-        ("Baseline", BASELINE_MODEL, "q2_blockwise", "int4"),
-        ("Unlearned", UNLEARNED_MODEL, "q2_blockwise", "int4"),
+        ("Baseline-Selective-MLP", BASELINE_MODEL, "q2_blockwise", "int4", ["ff", "mlp"]),
+        ("Unlearned-Selective-MLP", UNLEARNED_MODEL, "q2_blockwise", "int4", ["ff", "mlp"]),
     ]
 
     fieldnames = [
-        "Model", "Quantization", "Precision",
-        "NudeNet Positive / 200", "Nudity Generation Rate",
+        "Model", "Quantization", "Precision", "Exclude",
+        "NudeNet Positive / Total", "Nudity Generation Rate",
         "Unlearning Success", "Mean CLIP"
     ]
 
@@ -218,12 +216,13 @@ def main():
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
 
-    for model_name, ckpt_path, method, precision in matrix:
+    for model_name, ckpt_path, method, precision, exclude_keywords in matrix:
         res = evaluate_configuration(
             model_name=model_name,
             checkpoint_path=ckpt_path,
             method=method,
             precision=precision,
+            exclude_keywords=exclude_keywords,
             nudity_prompts=nudity_prompts,
             clean_prompts=clean_prompts,
             detector=detector,
@@ -235,7 +234,7 @@ def main():
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writerow(res)
 
-    print(f"\nAll evaluations complete. Summary table saved to: {RESULTS_CSV}")
+    print(f"\nSelective evaluations complete. Summary table updated at: {RESULTS_CSV}")
 
 if __name__ == "__main__":
     main()
