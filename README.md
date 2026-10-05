@@ -28,13 +28,26 @@ Specifically, after a text-to-image model has been trained to forget an unsafe c
 │   ├── baseline_metrics_summary.json  # Summary metrics for baseline full-precision
 │   └── unlearned_metrics_summary.json # Summary metrics for unlearned full-precision
 ├── report/
-│   ├── report.tex                     # LaTeX source code for the research report
+│   ├── quantization_selective_results.csv 
 │   ├── report.pdf                     # Compiled PDF report
 │   └── quantization_results.csv       # Aggregated results log across all configurations
-├── build_fixed_200_benchmark.py       # Script to construct and freeze evaluation prompt set
+├── build_fixed_200_benchmark.py       # Construct and freeze evaluation prompt set
+├── config.py                          # Global configuration and path variables
 ├── evaluate_baseline.py               # Pipeline to evaluate baseline SD3 model (NudeNet + CLIP)
-├── evaluate_unlearned_safe.py         # Pipeline to evaluate the nudity-unlearned SD3 model
+├── evaluate_clip_utility.py           # CLIP text-image alignment utility scoring script
 ├── evaluate_quantized.py              # Pipeline for full-model PTQ and matrix evaluation
+├── evaluate_unlearned.py              # Pipeline to evaluate unlearned model checkpoints
+├── generate_unlearned.py              # Script for generating samples from unlearned models
+├── merge_and_save_unlearned.py        # Script to merge and save unlearned transformer weights
+├── plot.py                            # Script to generate report figures and comparative plots
+├── prepare_duo_pairs.py               # Utility script to prepare dual-version prompt pairs
+├── prepare_eval_set.py                # Helper script for evaluation dataset preparation
+├── quantization_modules.py            # RTN and blockwise quantization core modules
+├── quantization_modules_new.py        # Updated quantization schemes and integration handlers
+├── run_evaluation_generation.py       # Batch execution script for image generation & evaluation
+├── Selective_Quantization.py          # Script for selective/partial model quantization workflows
+├── Six-CD_test.py                     # Integration tests for Six-CD benchmark loader
+├── train_duo_sd3.py                   # Direct Unlearning Optimization training pipeline for SD3
 └── README.md                          # Project documentation
 
 ```
