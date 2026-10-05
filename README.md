@@ -1,4 +1,3 @@
-```markdown
 # Research Task: Quantization × Machine Unlearning in Text-to-Image Models
 
 This repository contains the codebase, evaluation scripts, experimental reports, and visualization artifacts for investigating the intersection of machine unlearning and post-training quantization (PTQ) in text-to-image generative models (specifically focusing on **Stable Diffusion 3 Medium**).
