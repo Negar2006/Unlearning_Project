@@ -307,23 +307,12 @@ save_plot("07_baseline_vs_unlearned.png")
 
 selective_file = os.path.join(
     "report",
-    "quantization_selective_results.csv"
+    "selective_results.csv"
 )
 
 if os.path.exists(selective_file):
-    selective_df = pd.read_csv(selective_file)
 
-    selective_df.columns = selective_df.columns.str.strip()
-    if "Mean CLIP" in selective_df.columns and "Mean_CLIP" not in selective_df.columns:
-        selective_df["Mean_CLIP"] = selective_df["Mean CLIP"]
-    
-    if "Configuration" not in selective_df.columns:
-        if "Model" in selective_df.columns:
-            selective_df["Configuration"] = selective_df["Model"]
-        elif "Exclude" in selective_df.columns:
-            selective_df["Configuration"] = selective_df["Exclude"]
-        else:
-            selective_df["Configuration"] = [f"Config {i+1}" for i in range(len(selective_df))]
+    selective_df = pd.read_csv(selective_file)
 
     plt.figure(figsize=(9, 5))
 
@@ -344,56 +333,45 @@ else:
     print("Skipping Plot 8: selective_results.csv not found.")
 
 if os.path.exists(selective_file):
+
     selective_df = pd.read_csv(selective_file)
-    selective_df.columns = selective_df.columns.str.strip()
 
-    # Normalize column names if needed
-    if "Mean CLIP" in selective_df.columns and "Mean_CLIP" not in selective_df.columns:
-        selective_df["Mean_CLIP"] = selective_df["Mean CLIP"]
-    if "Nudity Generation Rate" in selective_df.columns and "NGR" not in selective_df.columns:
-        selective_df["NGR"] = selective_df["Nudity Generation Rate"]
+    plt.figure(figsize=(8, 5))
 
-    # --- Plot 9: Model vs. Mean CLIP Alignment ---
-    plt.figure(figsize=(10, 5))
-    plt.bar(
-        selective_df["Model"],
+    plt.plot(
+        selective_df["Preserved_Percentage"],
         selective_df["Mean_CLIP"],
-        color="skyblue"
+        marker="o",
+        linewidth=2
     )
-    plt.xlabel("Selective Configuration (Model)")
+
+    plt.xlabel("Percentage of Parameters Preserved at Higher Precision (%)")
     plt.ylabel("Mean CLIP Alignment")
-    plt.title("Selective Module Configuration vs. CLIP Utility")
-    plt.xticks(rotation=25, ha="right")
-    plt.grid(axis="y", alpha=0.3)
+    plt.title("Selective Module Preservation vs. CLIP Utility")
+    plt.grid(alpha=0.3)
+
     save_plot("09_selective_preservation_vs_clip.png")
 
 else:
     print("Skipping Plot 9: selective_results.csv not found.")
 
-
 if os.path.exists(selective_file):
+
     selective_df = pd.read_csv(selective_file)
-    selective_df.columns = selective_df.columns.str.strip()
+    plt.figure(figsize=(8, 5))
 
-    if "Nudity Generation Rate" in selective_df.columns and "NGR" not in selective_df.columns:
-        # Strip '%' sign if it's stored as a string with percentage symbols
-        if selective_df["Nudity Generation Rate"].dtype == object:
-            selective_df["NGR"] = selective_df["Nudity Generation Rate"].str.rstrip("%").astype(float)
-        else:
-            selective_df["NGR"] = selective_df["Nudity Generation Rate"]
-
-    # --- Plot 10: Model vs. Nudity Generation Rate ---
-    plt.figure(figsize=(10, 5))
-    plt.bar(
-        selective_df["Model"],
+    plt.plot(
+        selective_df["Preserved_Percentage"],
         selective_df["NGR"],
-        color="salmon"
+        marker="o",
+        linewidth=2
     )
-    plt.xlabel("Selective Configuration (Model)")
+
+    plt.xlabel("Percentage of Parameters Preserved at Higher Precision (%)")
     plt.ylabel("Nudity Generation Rate (%)")
-    plt.title("Selective Module Configuration vs. Nudity Generation Rate")
-    plt.xticks(rotation=25, ha="right")
-    plt.grid(axis="y", alpha=0.3)
+    plt.title("Selective Module Preservation vs. Nudity Generation Rate")
+    plt.grid(alpha=0.3)
+
     save_plot("10_selective_preservation_vs_ngr.png")
 
 else:
