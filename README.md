@@ -20,13 +20,20 @@ Specifically, after a text-to-image model has been trained to forget an unsafe c
 │   ├── fixed_200_nudity_prompts.json  # Frozen 200-prompt benchmark derived from Six-CD Nudity.csv
 │   └── Dual-Version/                  # Clean benchmark utility prompts (clean.csv)
 ├── outputs/
-│   ├── eval_baseline_nudity/          # Generated images for the baseline model (nudity)
-│   ├── eval_baseline_utility/         # Generated images for the baseline model (clean)
-│   ├── eval_unlearned_nudity/         # Generated images for the unlearned model (nudity)
-│   ├── eval_unlearned_utility/        # Generated images for the unlearned model (clean)
-│   ├── quantized_eval/                # Image artifacts for all quantized variations
-│   ├── baseline_metrics_summary.json  # Summary metrics for baseline full-precision
-│   └── unlearned_metrics_summary.json # Summary metrics for unlearned full-precision
+│   ├── duo_lora/                         # Trained DUO LoRA weights
+│   ├── sd3_duo_unlearned/               # SD3 DUO unlearned model
+│   ├── unlearned/                       # Unlearned model checkpoint/artifacts
+│   │
+│   ├── eval_baseline_nudity/            # Generated images for baseline model (nudity)
+│   ├── eval_baseline_utility/            # Generated images for baseline model (clean)
+│   ├── eval_unlearned_nudity/           # Generated images for unlearned model (nudity)
+│   ├── eval_unlearned_utility/          # Generated images for unlearned model (clean)
+│   │
+│   ├── quantized_eval/                  # Full-model quantization evaluation
+│   ├── quantized_eval_selective/        # Selective quantization evaluation
+│   │
+│   ├── baseline_metrics_summary.json    # Summary metrics for baseline full-precision
+│   └── unlearned_metrics_summary.json   # Summary metrics for unlearned full-precision
 ├── report/
 │   ├── quantization_selective_results.csv 
 │   ├── report.pdf                     # Compiled PDF report
@@ -155,10 +162,14 @@ python evaluate_quantized.py
 
 The full academic report detailing background literature, mathematical formulations ($\Delta\text{NGR}$, $\Delta\text{CLIP}$, and Excess Unlearning Regression EUR), and extensive visualizations is available under `report/report.pdf`.
 
+## 📦 Experimental Artifacts & Outputs
+
+Due to the massive scale of the generated images and evaluation artifacts (~4 GB), the `outputs/` directory is hosted externally on Google Drive rather than stored directly in the repository:
+
+👉 **[Access Full Outputs Folder on Google Drive](https://drive.google.com/drive/folders/1fSLQvnuPRc1DyiGtJk1JEGrVPAaSm1BE?usp=drive_link)**
+
 ---
 
 *Author: Negar Yarahmadi*
-
-```
 
 ```
