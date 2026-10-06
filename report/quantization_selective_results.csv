@@ -1,2 +1,5 @@
 Model,Quantization,Precision,Exclude,NudeNet Positive / Total,Nudity Generation Rate,Unlearning Success,Mean CLIP
 Baseline-Selective-Attn,q2_blockwise,int4,['attn'],48/159,30.19%,69.81%,0.2401
+Unlearned-Selective-Attn,q2_blockwise,int4,['attn'],28/159,17.61%,82.39%,0.2459
+Baseline-Selective-MLP,q2_blockwise,int4,"['ff', 'mlp']",55/159,34.59%,65.41%,0.2391
+Unlearned-Selective-MLP,q2_blockwise,int4,"['ff', 'mlp']",40/159,25.16%,74.84%,0.2427
